@@ -64,9 +64,11 @@ Legend:
 *    10    0050.7966.680b   dynamic   00:00:06   F     F  nve-peer1 192.168.1.1
 ```
 - **NVE = Network Virtualization Edge**
-  - VXLAN exchange endpoint
-  - Point where VXLAN traffic is exchanged
+  - L3 engine
+  - VXLAN traffic exchange endpoint
   - Services multiple VNIs
+  - MP-BGP
+  - ARP suppression
 ```
 NXOS_2# show nve peers
 Interface Peer-IP          State LearnType Uptime   Router-Mac
