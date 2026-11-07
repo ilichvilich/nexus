@@ -110,3 +110,6 @@ Interface VNI      Replication List  Source  Up Time
 nve1      10010    192.168.1.3       CLI     00:25:13
 nve1      20010    192.168.1.3       CLI     00:05:56
 ```
+- **Ping pcap:**
+<img width="1421" height="614" alt="image" src="https://github.com/user-attachments/assets/34b444f3-26f5-4839-9f3f-3f88fc6a02bd" />
+
