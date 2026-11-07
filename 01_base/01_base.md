@@ -4,7 +4,9 @@
 - **L3 gw:** BO (Bridged Overlay)
 - **VLAN management:** VLAN-Based
 
-<img width="557" height="437" alt="image" src="https://github.com/user-attachments/assets/35ed968c-bb3a-45c1-97c6-5dbdc505d45c" />
+<img width="564" height="511" alt="image" src="https://github.com/user-attachments/assets/c74a73af-d267-4949-ac4a-5e6e97bad759" />
+
+
 
 ### **VLAN-VNI mapping**
 #### Both SWs
@@ -13,27 +15,28 @@ vlan 10
   name VLAN10
   vn-segment 10010
 vlan 20
+  name VLAN20
   vn-segment 20010
 ```
 
 ### Static VNI-VTEP mapping
-#### NXOS
+#### LEAF_1
 ```
 interface nve1
   no shutdown
-  source-interface loopback1
+  source-interface loopback0
   member vni 10010
     ingress-replication protocol static
-      peer-ip 192.168.1.1
+      peer-ip 192.168.1.3
   member vni 20010
     ingress-replication protocol static
-      peer-ip 192.168.1.1
+      peer-ip 192.168.1.3
 ```
-#### NXOS_2
+#### LEAF_2
 ```
 interface nve1
   no shutdown
-  source-interface loopback1
+  source-interface loopback0
   member vni 10010
     ingress-replication protocol static
       peer-ip 192.168.1.2
@@ -44,24 +47,17 @@ interface nve1
 ### Verify
 - **View MAC table on Nexus in eve-ng:**
 ```
-NXOS_2# show system internal l2fwder mac
+LEAF_1# show system internal l2fwder mac
 Legend:
         * - primary entry, G - Gateway MAC, (R) - Routed MAC, O - Overlay MAC
         age - seconds since last seen,+ - primary entry using vPC Peer-Link,
         (T) - True, (F) - False, C - ControlPlane MAC
    VLAN     MAC Address      Type      age     Secure NTFY Ports
 ---------+-----------------+--------+---------+------+----+------------------
-NXOS_2# show system internal l2fwder mac
-Legend:
-        * - primary entry, G - Gateway MAC, (R) - Routed MAC, O - Overlay MAC
-        age - seconds since last seen,+ - primary entry using vPC Peer-Link,
-        (T) - True, (F) - False, C - ControlPlane MAC
-   VLAN     MAC Address      Type      age     Secure NTFY Ports
----------+-----------------+--------+---------+------+----+------------------
-*    20    0050.7966.680c   dynamic   00:00:02   F     F  nve-peer1 192.168.1.1
-*    20    0050.7966.6809   dynamic   00:00:02   F     F     Eth1/3
-*    10    0050.7966.6803   dynamic   00:00:06   F     F     Eth1/2
-*    10    0050.7966.680b   dynamic   00:00:06   F     F  nve-peer1 192.168.1.1
+*    20    0050.7966.680c   dynamic   00:01:52   F     F  nve-peer1 192.168.1.3
+*    20    0050.7966.6809   dynamic   00:02:04   F     F     Eth1/3
+*    10    0050.7966.6803   dynamic   00:05:32   F     F     Eth1/2
+*    10    0050.7966.680b   dynamic   00:05:32   F     F  nve-peer1 192.168.1.3
 ```
 - **NVE = Network Virtualization Edge**
   - L3 engine
@@ -70,22 +66,22 @@ Legend:
   - MP-BGP
   - ARP suppression
 ```
-NXOS_2# show nve peers
+LEAF_1# show nve peers
 Interface Peer-IP          State LearnType Uptime   Router-Mac
 --------- ---------------  ----- --------- -------- -----------------
-nve1      192.168.1.1      Up    DP        1d01h    n/a
+nve1      192.168.1.3      Up    DP        00:22:55 n/a
 !
 !
-NXOS_2# show nve peers detail
+LEAF_1# show nve peers detail
 Details of nve Peers:
 ----------------------------------------
-Peer-Ip: 192.168.1.1
+Peer-Ip: 192.168.1.3
     NVE Interface       : nve1
     Peer State          : Up
-    Peer Uptime         : 1d02h
+    Peer Uptime         : 00:23:08
     Router-Mac          : n/a
     Peer First VNI      : 10010
-    Time since Create   : 1d02h
+    Time since Create   : 00:23:08
     Configured VNIs     : 10010,20010
     Provision State     : peer-add-complete
     Learnt CP VNIs      : 10010,20010
@@ -94,7 +90,7 @@ Peer-Ip: 192.168.1.1
 ```
 - **View VNIs:**
 ```
-NXOS_2# show nve vni
+LEAF_1# show nve vni
 Codes: CP - Control Plane        DP - Data Plane
        UC - Unconfigured         SA - Suppress ARP
        SU - Suppress Unknown Unicast
@@ -105,4 +101,12 @@ Interface VNI      Multicast-group   State Mode Type [BD/VRF]      Flags
 --------- -------- ----------------- ----- ---- ------------------ -----
 nve1      10010    UnicastStatic     Up    DP   L2 [10]
 nve1      20010    UnicastStatic     Up    DP   L2 [20]
+```
+- **View remote VTEPs used for ingress replication:**
+```
+LEAF_1# show nve vni ingress-replication
+Interface VNI      Replication List  Source  Up Time
+--------- -------- ----------------- ------- -------
+nve1      10010    192.168.1.3       CLI     00:25:13
+nve1      20010    192.168.1.3       CLI     00:05:56
 ```
